@@ -1,0 +1,14 @@
+initiate
+    DISTANCE_LIMIT: double := 4
+    xSq: double := 0
+    ySq: double := 0
+    distance_limit: double := 0
+
+on Red(vX: double, vY: double, sX: double, sY: double)
+    xSq: double := (sX - vX) * (sX - vX)
+    ySq: double := (sY - vY) * (sY - vY)
+    distance: double := xSq + ySq
+    
+    distance_limit: double := DISTANCE_LIMIT * DISTANCE_LIMIT
+
+    output checkStopMargin(distance, distance_limit)

@@ -1,0 +1,6 @@
+pred isAccelBelowLimit(carAccel, accelLimit) = carAccel <= accelLimit
+
+prop VehicleAccelCheck :
+    forall vAccel. forall accelLimit .
+        checkAccelerationBelowLimit(vAccel, accelLimit) -> isAccelBelowLimit(vAccel, accelLimit)
+

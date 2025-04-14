@@ -1,0 +1,11 @@
+digraph G {
+  0 [shape=octagon, color=red, label="0 : forall distance . forall distance_limit . checkStopMargin(distance,distance_limit) -> distance <= distance_limit"]
+  1 [shape=box, label="1 : forall distance_limit . checkStopMargin(distance,distance_limit) -> distance <= distance_limit"]
+  2 [shape=box, label="2 : checkStopMargin(distance,distance_limit) -> distance <= distance_limit"]
+  3 [shape=box, label="3 : checkStopMargin(distance,distance_limit)"]
+  4 [shape=box, label="4 : distance <= distance_limit"]
+  2 -> 3
+  2 -> 4
+  1 -> 2
+  0 -> 1
+}

@@ -1,0 +1,2 @@
+on AccelerationChanged(vAccel: int, accelLimit: int)
+    output checkAccelerationBelowLimit(vAccel, accelLimit)

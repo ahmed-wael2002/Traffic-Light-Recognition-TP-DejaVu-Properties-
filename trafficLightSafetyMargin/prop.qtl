@@ -1,0 +1,5 @@
+pred isDistanceBelowStopMargin(distance, distance_limit) = distance <= distance_limit
+
+prop StopMarginCheck :
+    forall distance . forall distance_limit .
+        checkStopMargin(distance, distance_limit) -> isDistanceBelowStopMargin(distance, distance_limit)
