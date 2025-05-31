@@ -1,0 +1,6 @@
+pred isStateEqual(recognizedState, actualState) = recognizedState = actualState
+
+prop StateRecognitionCheck :
+    forall recState. forall actState .
+        checkStateRecognition(recState, actState) -> isStateEqual(recState, actState)
+

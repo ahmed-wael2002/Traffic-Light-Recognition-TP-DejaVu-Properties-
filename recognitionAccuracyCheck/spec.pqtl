@@ -1,0 +1,2 @@
+on StateRecognized(recognizedState: int, actualState: int)
+    output checkStateRecognition(recognizedState, actualState)
