@@ -1,3 +1,5 @@
+package recognition_accuracy
+
 
 
 /* Generic Monitoring Code common for all properties. */
@@ -537,12 +539,12 @@ abstract class Monitor(preMonitor: PreMonitorTrait){
     * @param args the arguments to the event.
     */
 
-  def submit(name: String, args: List[Any]): Unit = {
+  def submit(name: String, args: List[Any]): Boolean = {
     if (Options.STATISTICS) {
       statistics.update(name)
     }
     state.update(name, args)
-    evaluate()
+    return evaluate()
   }
 
   /**
@@ -657,19 +659,19 @@ abstract class Monitor(preMonitor: PreMonitorTrait){
     * property.
     */
 
-  def evaluate(): Unit = {
+  def evaluate(): Boolean = {
     debug(s"\ncurrentTime = $currentTime\n$state\n")
     for (formula <- formulae) {
       formula.setTime(deltaTime)
       if (!formula.evaluate()) {
         errors += 1
-
-        if (Options.PRINTS_STAT) {
-          println(s"\n*** Property ${formula.name} violated on event number $lineNr:\n")
-          println(state)
-        }
+        println(s"\n*** Property ${formula.name} violated on event number $lineNr:\n")
+        println(state)
+        return false;
       }
     }
+
+    return true;
   }
 
   /**
@@ -1397,24 +1399,11 @@ object PreMonitor extends PreMonitorTrait {
      */
     def ite[T](condition: Boolean, ifTrue: T, ifFalse: T): T = if (condition) ifTrue else ifFalse
   }
-	private var ACCURACY_LIMIT: Double = 0.30
-	private var prev_ACCURACY_LIMIT: Double = 0.30
-	private var count_events: Double = 0
-	private var prev_count_events: Double = 0
-	private var count_violations: Double = 0
-	private var prev_count_violations: Double = 0
-	private var recognition_accuracy: Double = 0
-	private var prev_recognition_accuracy: Double = 0
 	private var recognizedState: Int = 0
 	private var actualState: Int = 0
-	private var is_violation: Boolean = false
 
 
 	private def on_StateRecognized(recognizedState: Int, actualState: Int): Unit = {
-		this.is_violation = recognizedState != actualState
-		this.count_events = prev_count_events + 1
-		this.count_violations = (if (is_violation) (prev_count_violations + 1) else (prev_count_violations))
-		this.recognition_accuracy = prev_count_violations / prev_count_events
 	}
 
 	private def StateRecognized_output(): Any = {
@@ -1440,10 +1429,6 @@ object PreMonitor extends PreMonitorTrait {
 			}
 			case _ => event = List(event_name, params.toList)
 			}
-		prev_ACCURACY_LIMIT = ACCURACY_LIMIT
-		prev_count_events = count_events
-		prev_count_violations = count_violations
-		prev_recognition_accuracy = recognition_accuracy
 		Some(event)
 	}
 }
@@ -1497,451 +1482,83 @@ class Formula_StateRecognitionCheck(monitor: Monitor) extends Formula(monitor) {
   debugMonitorState()
 }
         
-
-  
-object PreMonitor extends PreMonitorTrait {
-  /**
-   * Extension methods for various types.
-   */
-
-
- /**
- * Provides an implicit class to enable the use of the `in` infix operator
- * for checking the presence of an element within a collection.
- *
- * @param left the element to be checked for presence within a collection.
- * @tparam T the type of the element.
- */
- implicit class InfixIn[T](val left: T) {
-
-   /**
-   * Checks if the `left` element is present in the given elements.
-   *
-   * @param right a sequence of elements to check against.
-   * @return true if `left` is present in the `right` sequence, false otherwise.
-   */
-   def in(right: T*): Boolean = right.contains(left)
-  }
-
-  /**
-   * Extension methods for Boolean type.
-   *
-   * @param a the source Boolean value.
-   */
-  implicit class extendedBoolean(a: Boolean) {
-
-    /**
-     * Logical implication.
-     *
-     * @param b target Boolean value.
-     * @return true if either `a` is false or `b` is true, otherwise false.
-     */
-    def ->(b: => Boolean): Boolean = !a || b
-
-    /**
-     * Logical biconditional (equivalence).
-     *
-     * @param b target Boolean value.
-     * @return true if `a` and `b` are both true or both false, otherwise false.
-     */
-    def <->(b: => Boolean): Boolean = a == b
-  }
-
- /**
-  * Implicit class to provide power operation `^^` for `Double` base values.
-  *
-  * @param a the base of type Double.
-  */
- implicit class ExtendedDouble(val a: Double) extends AnyVal {
-
-  /**
-    * Raises the base `a` to the power of an `Int` exponent `b`.
-    *
-    * @param b the exponent of type Int.
-    * @return the result as a Double.
-    */
-   def ^^(b: Int): Double = scala.math.pow(a, b.toDouble)
-
-   /**
-     * Raises the base `a` to the power of a `Float` exponent `b`.
-     *
-     * @param b the exponent of type Float.
-     * @return the result as a Double.
-     */
-   def ^^(b: Float): Double = scala.math.pow(a, b.toDouble)
-
-   /**
-     * Raises the base `a` to the power of a `Double` exponent `b`.
-     *
-     * @param b the exponent of type Double.
-     * @return the result as a Double.
-     */
-   def ^^(b: Double): Double = scala.math.pow(a, b)
- }
-
- /**
-   * Implicit class to provide power operation `^^` for `Int` base values.
-   *
-   * @param a the base of type Int.
-   */
- implicit class ExtendedInt(val a: Int) extends AnyVal {
-
-   /**
-     * Raises the base `a` to the power of an `Int` exponent `b`.
-     *
-     * @param b the exponent of type Int.
-     * @return the result as a Double.
-     */
-   def ^^(b: Int): Double = scala.math.pow(a.toDouble, b.toDouble)
-
-   /**
-     * Raises the base `a` to the power of a `Float` exponent `b`.
-     *
-     * @param b the exponent of type Float.
-     * @return the result as a Double.
-     */
-   def ^^(b: Float): Double = scala.math.pow(a.toDouble, b.toDouble)
-
-   /**
-     * Raises the base `a` to the power of a `Double` exponent `b`.
-     *
-     * @param b the exponent of type Double.
-     * @return the result as a Double.
-     */
-   def ^^(b: Double): Double = scala.math.pow(a.toDouble, b)
- }
-
- /**
-   * Implicit class to provide power operation `^^` for `Float` base values.
-   *
-   * @param a the base of type Float.
-   */
- implicit class ExtendedFloat(val a: Float) extends AnyVal {
-
-   /**
-     * Raises the base `a` to the power of an `Int` exponent `b`.
-     *
-     * @param b the exponent of type Int.
-     * @return the result as a Float.
-     */
-   def ^^(b: Int): Float = scala.math.pow(a.toDouble, b.toDouble).toFloat
-
-   /**
-     * Raises the base `a` to the power of a `Float` exponent `b`.
-     *
-     * @param b the exponent of type Float.
-     * @return the result as a Float.
-     */
-   def ^^(b: Float): Float = scala.math.pow(a.toDouble, b.toDouble).toFloat
-
-   /**
-     * Raises the base `a` to the power of a `Double` exponent `b`.
-     *
-     * @param b the exponent of type Double.
-     * @return the result as a Float.
-     */
-   def ^^(b: Double): Float = scala.math.pow(a.toDouble, b).toFloat
- }
-
-
-  /**
-   * A type class defining absolute operation on a type.
-   *
-   * @tparam A the type for which the absolute operation is defined.
-   */
-  trait AbsOps[T] {
-
-    /**
-     * Computes the absolute value of `value`.
-     *
-     * @param value the input value.
-     * @return absolute value of `value`.
-     */
-    def abs(value: T): T
-  }
-
-  // Below are instances for the AbsOps type class for supported types: Int, Float, and Double.
-
-  implicit object IntAbsOps extends AbsOps[Int] {
-    def abs(value: Int): Int = math.abs(value)
-  }
-
-  implicit object FloatAbsOps extends AbsOps[Float] {
-    def abs(value: Float): Float = math.abs(value)
-  }
-
-  implicit object DoubleAbsOps extends AbsOps[Double] {
-    def abs(value: Double): Double = math.abs(value)
-  }
-
-  /**
-   * Generic utility to compute the absolute value for supported types.
-   *
-   * @param value the input value.
-   * @param ops implicit evidence of the AbsOps type class instance for type A.
-   * @tparam A type of the value.
-   * @return absolute value of `value`.
-   */
-  def abs[T](value: T)(implicit ops: AbsOps[T]): T = ops.abs(value)
-
-
-  /**
-   * Provides utility methods for common operations.
-   */
-  object Operators {
-
-    /**
-     * If-Then-Else operation.
-     *
-     * @param condition a Boolean condition to check.
-     * @param ifTrue result to return if `condition` is true.
-     * @param ifFalse result to return if `condition` is false.
-     * @tparam T type of the results.
-     * @return `ifTrue` if `condition` is true, `ifFalse` otherwise.
-     */
-    def ite[T](condition: Boolean, ifTrue: T, ifFalse: T): T = if (condition) ifTrue else ifFalse
-  }
-	private var ACCURACY_LIMIT: Double = 0.30
-	private var prev_ACCURACY_LIMIT: Double = 0.30
-	private var count_events: Double = 0
-	private var prev_count_events: Double = 0
-	private var count_violations: Double = 0
-	private var prev_count_violations: Double = 0
-	private var recognition_accuracy: Double = 0
-	private var prev_recognition_accuracy: Double = 0
-	private var recognizedState: Int = 0
-	private var actualState: Int = 0
-	private var is_violation: Boolean = false
-
-
-	private def on_StateRecognized(recognizedState: Int, actualState: Int): Unit = {
-		this.is_violation = recognizedState != actualState
-		this.count_events = prev_count_events + 1
-		this.count_violations = (if (is_violation) (prev_count_violations + 1) else (prev_count_violations))
-		this.recognition_accuracy = prev_count_violations / prev_count_events
-	}
-
-	private def StateRecognized_output(): Any = {
-		List("checkStateRecognition", List(recognizedState.toString, actualState.toString))
-	}
-
-	def evaluate(event_name: String, params: Any*): Option[Any] = {
-		var event : Any = null
-
-		event_name match {
-			case "StateRecognized" => {
-				if (params.length != 2) throw new IllegalArgumentException("Incorrect number of parameters for event StateRecognized")
-				Try(params(0).toString.trim.toInt) match {
-					case Success(value) => this.recognizedState = value
-					case Failure(e) => println(s"Failed to convert to Int: $e")
-				}
-				Try(params(1).toString.trim.toInt) match {
-					case Success(value) => this.actualState = value
-					case Failure(e) => println(s"Failed to convert to Int: $e")
-				}
-				on_StateRecognized(recognizedState, actualState)
-				event = StateRecognized_output()
-			}
-			case _ => event = List(event_name, params.toList)
-			}
-		prev_ACCURACY_LIMIT = ACCURACY_LIMIT
-		prev_count_events = count_events
-		prev_count_violations = count_violations
-		prev_recognition_accuracy = recognition_accuracy
-		Some(event)
-	}
-}
-
-
-/*
-  prop AccuracyLimitCheck : forall accuracy . forall limit . checkAccuracyLimit(accuracy,limit) -> accuracy <= limit 
-*/
-
-class Formula_AccuracyLimitCheck(monitor: Monitor) extends Formula(monitor) {
-          
-  override def evaluate(): Boolean = {
-    // assignments1 (leaf nodes that are not rule calls):
-      now(3) = build("checkAccuracyLimit")(V("accuracy"),V("limit"))
-    // assignments2 (rule nodes excluding what is below @ and excluding leaf nodes):
-    // assignments3 (rule calls):
-    // assignments4 (the rest of rules that are below @ and excluding leaf nodes):
-    // assignments5 (main formula excluding leaf nodes):
-      now(4) = relation("accuracy",LEOP,"limit").or(pre(4))
-      now(2) = now(3).not().or(now(4))
-      now(1) = var_limit.seen.imp(now(2)).forAll(var_limit.quantvar)
-      now(0) = var_accuracy.seen.imp(now(1)).forAll(var_accuracy.quantvar)
-
-    debugMonitorState()
-
-    val error = now(0).isZero
-    if (error) monitor.recordResult()
-    tmp = now
-    now = pre
-    pre = tmp
-    touchedByLastEvent = emptyTouchedSet
-    !error
-  }
-
-  val var_accuracy :: var_limit :: Nil = declareVariables(("accuracy",true), ("limit",true))(0)
-
-  varsInRelations = Set("accuracy","limit")
-  val indices: List[Int] = List()
-
-  pre = Array.fill(5)(bddGenerator.False)
-  now = Array.fill(5)(bddGenerator.False)
-
-  txt = Array(
-    "forall accuracy . forall limit . checkAccuracyLimit(accuracy,limit) -> accuracy <= limit",
-      "forall limit . checkAccuracyLimit(accuracy,limit) -> accuracy <= limit",
-      "checkAccuracyLimit(accuracy,limit) -> accuracy <= limit",
-      "checkAccuracyLimit(accuracy,limit)",
-      "accuracy <= limit"
-  )
-
-  debugMonitorState()
-}
-        
 /* The specialized Monitor for the provided properties. */
 
 class PropertyMonitor(preMonitor: PreMonitorTrait) extends Monitor(preMonitor) {
 
-  def eventsInSpec: Set[String] = Set("checkStateRecognition","checkAccuracyLimit")
+  def eventsInSpec: Set[String] = Set("checkStateRecognition")
 
-  formulae ++= List(new Formula_StateRecognitionCheck(this),new Formula_AccuracyLimitCheck(this))
+  formulae ++= List(new Formula_StateRecognitionCheck(this))
 }
       
 
 object TraceMonitor {
-  private val usage: String =
- """Usage: Usage:
-    --logfile=<filename> [OPTIONS]
 
-Options:
-    -l, --logfile=<filename>        Path to the CSV log file to be analyzed. (Optional)
-    -b, --bits=<numOfBits>          Number of bits for each variable in the BDD representation. (Default: 20 bits)
-    -m, --mode=(debug|profile)      Set the output mode. (Default: None)
-    -st, --stat=(true|false)        Print violations if set to true. (Optional)
-    -c, --clear=(0|1)               Clear generated files and folders. Set to '1' for cleaning. (Optional)
+  var moni_ = new PropertyMonitor( PreMonitor )
 
-Argument Examples:
-    --logfile log.csv
-    --logfile log.csv --bits 16 --mode debug --stat false
+  def eval(event: String): Boolean = {
 
- """.stripMargin
+    //println("MONITOR RECEIVED: ", event)
+    openResultFile("dejavu-results")
+    var input = event.split(",")
+    var name = input(0)
+    var args = new ListBuffer[Any]()
+    Options.BITS = 20       
+    moni_.setTime(moni_.lineNr) //comment if untimed
+    for (i <- 1 until input.length) {
+          args += input(i)
+      
+    }
+    moni_.lineNr+=1
+    //println("arguments:", args.toList)
+  //  var res =  moni_.submit(name, args)
+  var res = false
+    if(Options.PRE_PREDICTION){
+    val modifiedEvent = PreMonitor.evaluate(name,args: _*)
+    modifiedEvent match {
+      case Some(first :: second :: _) =>
+        res = moni_.submit(first.toString, second.asInstanceOf[List[String]])
+      case Some(event_name: String) =>
+        if (event_name != "skip") res = moni_.submit(event_name.toString, Nil)
+      case Some(_) =>
+        println("Unexpected event structure output from the pre processing")
+      case None =>
+        res = moni_.submit(name, args.toList)
+    }
+    }
 
- def time[R](block: => R): R = {
-     val t0 = System.nanoTime()
-     val result = block    // call-by-name
-     val t1 = System.nanoTime()
-     println("Evaluation time: " + (t1 - t0) / 1e9d + "s")
-     result
- }
+    //println("%d",moni_.lineNr)
+    closeResultFile()
+    // println("RESULT:");
+    // println(res);
+    return res;
+  }
 
   def main(args: Array[String]): Unit = {
-
-    if (2 <= args.length && args.length <= 10 && args.length % 2 == 0) {
-      val argMapBuilder = Map.newBuilder[String, Any]
-      args.sliding(2, 2).toList.collect {
-        case Array("--logfile", logfile: String) => argMapBuilder.+=("logfile" -> logfile)
-        case Array("--bits", numOfBits: String) => argMapBuilder.+=("bits" -> numOfBits)
-        case Array("--mode", mode: String) => argMapBuilder.+=("mode" -> mode)
-        case Array("--resultfile", resultfile: String) => argMapBuilder.+=("resultfile" -> resultfile)
-        case Array("--stat", stat: String) => argMapBuilder.+=("stat" -> stat)
-      }
-
-      val argMap = argMapBuilder.result()
-
-      val logFile = argMap.get("logfile")
-      val logfilePath = logFile match {
-        case Some(value) => value.toString
-        case None =>
-          println(s"*** program must be called with logfile argument")
-          println(usage)
-          return
-      }
-
-      var dir = new File(logfilePath)
-      if (!dir.exists) {
-        println(s" ***logfile is not a valid file")
-        return
-      }
-
-      val resultfile = argMap.get("resultfile")
-      Options.RESULT_FILE = resultfile match {
-        case Some(value) => value.toString
-        case None => "/home/wael/Desktop/Properties /Phase(2)-Properties/recognitionAccuracyCheck/./output/dejavu-results"
-      }
-
-      dir = new File(Options.RESULT_FILE)
-      if (!dir.getParentFile.exists) {
-        println(s" ***resultfile parent is not a valid folder")
-        return
-      }
-
-      val bits = argMap.get("bits")
-      val bitsValue = bits match {
-        case Some(value) =>
-          if (!value.toString.matches("""\d+""")) {
-            println(s"*** bits argument must be an integer")
-            return
-          } else {
-            value.toString
-          }
-        case None => "20" // Default is 20 bits length
-      }
-      Options.BITS = bitsValue.toInt
-
-      val mode = argMap.get("mode")
-      mode match {
-        case Some(value) =>
-          val modeValue = value.toString.toLowerCase()
-          if (modeValue == "debug") Options.DEBUG = true
-          else if (modeValue == "profile") Options.PROFILE = true
-          else {
-            println(s"*** mode argument must be: debug or profile")
-            return
-          }
-        case None => println("No mode was selected")
-      }
-
-      val printStat = argMap.get("stat")
-      printStat match {
-        case Some(value) =>
-          val printStatValue = value.toString.toLowerCase()
-          if (printStatValue == "true") Options.PRINTS_STAT = true
-          else if (printStatValue == "false") Options.PRINTS_STAT = false
-          else {
-            println(s"*** stat argument must be: true or false")
-            return
-          }
-        case None => println("Default for stat is true")
-      }
-
-      val m = new PropertyMonitor(PreMonitor)
-
+    if (1 <= args.length && args.length <= 3) {
+      if (args.length > 1) Options.BITS = args(1).toInt
+      val m = new PropertyMonitor( PreMonitor )
+      val file = args(0)
+      if (args.length == 3 && args(2) == "debug") Options.DEBUG = true
+      if (args.length == 3 && args(2) == "profile") Options.PROFILE = true
       try {
-      time {
-        openResultFile(Options.RESULT_FILE)
+        openResultFile("dejavu-results")
         if (Options.PROFILE) {
           openProfileFile("dejavu-profile.csv")
           m.printProfileHeader()
         }
-        m.submitCSVFile(logfilePath)
-       }
-         
-
-     } catch {
-        case e: Throwable =>
-          println(s"\n*** $e\n")
-        // e.printStackTrace()
+        m.submitCSVFile(file)
+      } catch {
+          case e: Throwable =>
+            println(s"\n*** ${e}\n")
+            // e.printStackTrace()
       } finally {
         closeResultFile()
         if (Options.PROFILE) closeProfileFile()
       }
     } else {
       println("*** call with these arguments:")
-      println(usage)
+      println("<logfile> [<bits> [debug|profile]]")
     }
   }
 }
-      

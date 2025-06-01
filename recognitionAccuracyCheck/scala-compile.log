@@ -1,4 +1,0 @@
-output/TraceMonitor.scala:1502: error: PreMonitor is already defined as object PreMonitor
-object PreMonitor extends PreMonitorTrait {
-       ^
-one error found
