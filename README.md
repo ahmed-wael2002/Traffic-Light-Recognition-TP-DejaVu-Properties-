@@ -1,6 +1,33 @@
 Properties Compilation
 ======================
 
+## Automated Compilation Script
+
+A new compilation script `compile_properties.sh` has been created to automate the entire compilation process for properties. This script streamlines all the manual steps described below into a single command.
+
+### Usage
+
+1. **Copy the script**: Place `compile_properties.sh` in the same directory as your `prop.qtl` and `spec.pqtl` files
+2. **Make it executable**: `chmod +x compile_properties.sh`
+3. **Run the script**: `./compile_properties.sh <package_name>`
+
+**Example:**
+```bash
+./compile_properties.sh speed_limit
+```
+
+The script will automatically:
+- Generate the TraceMonitor.scala file
+- Apply all necessary modifications (package declaration, function updates)
+- Compile the Scala code and create the JAR file
+- Generate a Python test script (`test_<package_name>.py`)
+
+---
+
+## Manual Compilation Process
+
+If you prefer to compile manually or need to understand the individual steps, follow the documentation below.
+
 Refer to the following documentation for installation:
 https://teal-ice-1dd.notion.site/Dejavu-a2c67c25839b4dff9de9b8503fe7dc7b?pvs=4
 

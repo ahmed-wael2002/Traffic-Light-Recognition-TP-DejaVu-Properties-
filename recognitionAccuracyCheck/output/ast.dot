@@ -9,3 +9,14 @@ digraph G {
   1 -> 2
   0 -> 1
 }
+digraph G {
+  0 [shape=octagon, color=red, label="0 : forall accuracy . forall limit . checkAccuracyLimit(accuracy,limit) -> accuracy <= limit"]
+  1 [shape=box, label="1 : forall limit . checkAccuracyLimit(accuracy,limit) -> accuracy <= limit"]
+  2 [shape=box, label="2 : checkAccuracyLimit(accuracy,limit) -> accuracy <= limit"]
+  3 [shape=box, label="3 : checkAccuracyLimit(accuracy,limit)"]
+  4 [shape=box, label="4 : accuracy <= limit"]
+  2 -> 3
+  2 -> 4
+  1 -> 2
+  0 -> 1
+}

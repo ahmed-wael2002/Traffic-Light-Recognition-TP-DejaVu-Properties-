@@ -4,3 +4,7 @@ prop StateRecognitionCheck :
     forall recState. forall actState .
         checkStateRecognition(recState, actState) -> isStateEqual(recState, actState)
 
+prop AccuracyLimitCheck :
+    forall accuracy. forall limit .
+        checkAccuracyLimit(accuracy, limit) -> accuracy <= limit
+

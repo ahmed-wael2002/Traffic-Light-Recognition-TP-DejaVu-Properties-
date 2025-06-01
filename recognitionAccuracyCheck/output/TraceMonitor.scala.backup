@@ -1837,47 +1837,6 @@ Argument Examples:
      result
  }
 
-
-  var moni_ = new PropertyMonitor( PreMonitor )
-
-  def eval(event: String): Boolean = {
-
-    //println("MONITOR RECEIVED: ", event)
-    openResultFile("dejavu-results")
-    var input = event.split(",")
-    var name = input(0)
-    var args = new ListBuffer[Any]()
-    Options.BITS = 20       
-    moni_.setTime(moni_.lineNr) //comment if untimed
-    for (i <- 1 until input.length) {
-          args += input(i)
-      
-    }
-    moni_.lineNr+=1
-    //println("arguments:", args.toList)
-  //  var res =  moni_.submit(name, args)
-  var res = false
-    if(Options.PRE_PREDICTION){
-    val modifiedEvent = PreMonitor.evaluate(name,args: _*)
-    modifiedEvent match {
-      case Some(first :: second :: _) =>
-        res = moni_.submit(first.toString, second.asInstanceOf[List[String]])
-      case Some(event_name: String) =>
-        if (event_name != "skip") res = moni_.submit(event_name.toString, Nil)
-      case Some(_) =>
-        println("Unexpected event structure output from the pre processing")
-      case None =>
-        res = moni_.submit(name, args.toList)
-    }
-    }
-
-    //println("%d",moni_.lineNr)
-    closeResultFile()
-    // println("RESULT:");
-    // println(res);
-    return res;
-  }
-
   def main(args: Array[String]): Unit = {
 
     if (2 <= args.length && args.length <= 10 && args.length % 2 == 0) {
